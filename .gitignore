@@ -70,4 +70,4 @@ data/
 
 # *.pt and ultralytics/nn
 *.pt
-ultralytics/nn
+ultralytics/
