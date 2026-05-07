@@ -27,3 +27,12 @@ runtime:
   max_startup_seconds: 10
   max_exit_seconds: 2
   memory_growth_mb_limit: 128
+
+web:
+  host: 0.0.0.0
+  port: 8000
+  username: admin
+  password_env: YOLO_WEB_PASSWORD
+  stream_fps: 20
+  jpeg_quality: 80
+  session_secret_env: YOLO_WEB_SESSION_SECRET

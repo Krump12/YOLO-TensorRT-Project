@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -99,6 +100,46 @@ class RuntimeMetrics:
 
 
 @dataclass
+class WebConfig:
+    host: str = "0.0.0.0"
+    port: int = 8000
+    username: str = "admin"
+    password_env: str = "YOLO_WEB_PASSWORD"
+    stream_fps: float = 20.0
+    jpeg_quality: int = 80
+    session_secret_env: str = "YOLO_WEB_SESSION_SECRET"
+
+    def validate(self) -> None:
+        if not self.host:
+            raise ValueError("web host must not be empty")
+        if not 1 <= int(self.port) <= 65535:
+            raise ValueError("web port must be between 1 and 65535")
+        if not self.username:
+            raise ValueError("web username must not be empty")
+        if not self.password_env:
+            raise ValueError("web password_env must not be empty")
+        if not self.session_secret_env:
+            raise ValueError("web session_secret_env must not be empty")
+        if self.stream_fps <= 0:
+            raise ValueError("web stream_fps must be positive")
+        if not 1 <= int(self.jpeg_quality) <= 100:
+            raise ValueError("web jpeg_quality must be between 1 and 100")
+
+    def password(self) -> str:
+        return _required_env(self.password_env, "web password")
+
+    def session_secret(self) -> str:
+        return _required_env(self.session_secret_env, "web session secret")
+
+
+def _required_env(name: str, label: str) -> str:
+    value = os.environ.get(name, "")
+    if not value:
+        raise RuntimeError(f"missing required {label} environment variable: {name}")
+    return value
+
+
+@dataclass
 class AppConfig:
     model_path: Path
     engine_path: Path
@@ -118,9 +159,11 @@ class AppConfig:
     max_startup_seconds: float = 10.0
     max_exit_seconds: float = 2.0
     memory_growth_mb_limit: float = 128.0
+    web: WebConfig = field(default_factory=WebConfig)
 
     def validate(self) -> None:
         self.camera.validate()
+        self.web.validate()
         if not 0.0 <= self.conf_threshold <= 1.0:
             raise ValueError("conf_threshold must be between 0.0 and 1.0")
         if not 0.0 <= self.iou_threshold <= 1.0:
@@ -159,6 +202,7 @@ def load_config(path: str | Path) -> AppConfig:
     camera_data = data.get("camera", {})
     inference = data.get("inference", {})
     runtime = data.get("runtime", {})
+    web = data.get("web", {})
     config = AppConfig(
         model_path=Path(model.get("pt_path", "models/best.pt")),
         engine_path=Path(model.get("engine_path", "models/best.engine")),
@@ -184,6 +228,15 @@ def load_config(path: str | Path) -> AppConfig:
         max_startup_seconds=float(runtime.get("max_startup_seconds", 10)),
         max_exit_seconds=float(runtime.get("max_exit_seconds", 2)),
         memory_growth_mb_limit=float(runtime.get("memory_growth_mb_limit", 128)),
+        web=WebConfig(
+            host=str(web.get("host", "0.0.0.0")),
+            port=int(web.get("port", 8000)),
+            username=str(web.get("username", "admin")),
+            password_env=str(web.get("password_env", "YOLO_WEB_PASSWORD")),
+            stream_fps=float(web.get("stream_fps", 20)),
+            jpeg_quality=int(web.get("jpeg_quality", 80)),
+            session_secret_env=str(web.get("session_secret_env", "YOLO_WEB_SESSION_SECRET")),
+        ),
     )
     config.validate()
     return config

@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: YOLO TensorRT Web Dashboard API
+  version: 0.1.0
+paths:
+  /:
+    get:
+      summary: Redirect to dashboard or login
+      responses:
+        "302":
+          description: Redirects based on authentication state.
+  /login:
+    get:
+      summary: Render login page
+      responses:
+        "200":
+          description: Login page HTML.
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Submit login credentials
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        "302":
+          description: Login accepted and redirected to dashboard.
+        "401":
+          description: Login rejected.
+  /logout:
+    post:
+      summary: End authenticated session
+      responses:
+        "302":
+          description: Session cleared and redirected to login.
+  /dashboard:
+    get:
+      summary: Render live video dashboard
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Dashboard HTML.
+          content:
+            text/html:
+              schema:
+                type: string
+        "302":
+          description: Unauthenticated users are redirected to login.
+  /detections:
+    get:
+      summary: Render latest detections table page
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Detections page HTML.
+          content:
+            text/html:
+              schema:
+                type: string
+        "302":
+          description: Unauthenticated users are redirected to login.
+  /video_feed:
+    get:
+      summary: Stream latest annotated frames as MJPEG
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Multipart MJPEG stream.
+          content:
+            multipart/x-mixed-replace:
+              schema:
+                type: string
+                format: binary
+        "302":
+          description: Unauthenticated users are redirected to login.
+  /api/detections/latest:
+    get:
+      summary: Return latest-frame detection results
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Latest detection snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetectionSnapshot"
+        "401":
+          description: Authentication required.
+  /api/status:
+    get:
+      summary: Return runtime status
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Runtime status snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuntimeStatus"
+        "401":
+          description: Authentication required.
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+  schemas:
+    DetectionSnapshot:
+      type: object
+      required: [timestamp, fps, target_count, detections]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        fps:
+          type: number
+          format: float
+        target_count:
+          type: integer
+          minimum: 0
+        detections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Detection"
+    Detection:
+      type: object
+      required: [class_id, class_name, confidence, bbox]
+      properties:
+        class_id:
+          type: integer
+        class_name:
+          type: string
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        bbox:
+          $ref: "#/components/schemas/BoundingBox"
+    BoundingBox:
+      type: object
+      required: [x1, y1, x2, y2]
+      properties:
+        x1:
+          type: integer
+        y1:
+          type: integer
+        x2:
+          type: integer
+        y2:
+          type: integer
+    RuntimeStatus:
+      type: object
+      required: [camera_running, detector_loaded, fps, target_count]
+      properties:
+        camera_running:
+          type: boolean
+        detector_loaded:
+          type: boolean
+        fps:
+          type: number
+          format: float
+        target_count:
+          type: integer
+          minimum: 0
+        last_update:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true

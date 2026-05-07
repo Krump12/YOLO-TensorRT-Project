@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YOLO Web Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body class="auth-page">
+    <main class="login-panel" aria-label="Login">
+      <h1>YOLO TensorRT</h1>
+      <form method="post" action="/login" class="login-form">
+        <label>
+          Username
+          <input name="username" autocomplete="username" required autofocus>
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        {% if error %}
+        <p class="error" role="alert">{{ error }}</p>
+        {% endif %}
+        <button type="submit">Log in</button>
+      </form>
+    </main>
+  </body>
+</html>

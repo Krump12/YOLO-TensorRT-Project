@@ -1,0 +1,123 @@
+YOLO TensorRT Web Dashboard - Environment Requirements
+======================================================
+
+1. Hardware
+-----------
+- NVIDIA Jetson Orin Nano
+- CSI camera connected and working
+- Sufficient power supply for Jetson and camera
+- Network access from browser client to Jetson
+
+2. Operating System / Platform
+------------------------------
+- Ubuntu on Jetson with NVIDIA JetPack installed
+- CUDA, cuDNN, TensorRT from JetPack
+- OpenCV built with GStreamer support
+- GStreamer CSI camera pipeline support
+
+3. Python
+---------
+- Python 3.8 or newer
+- Recommended: use the Python environment that can access JetPack/TensorRT/OpenCV
+
+4. Existing Project Runtime Dependencies
+----------------------------------------
+These are required by the original YOLO TensorRT detection pipeline:
+
+- numpy
+- pyyaml
+- opencv-python or JetPack OpenCV package with GStreamer support
+- ultralytics
+- torch / torchvision, if needed for model export or Ultralytics runtime
+- tensorrt Python bindings
+- CUDA/cuDNN runtime libraries
+- psutil
+- pytest, for tests
+
+5. New Web Feature Dependencies
+-------------------------------
+Install these in the active Python environment:
+
+python -m pip install fastapi uvicorn python-multipart httpx
+
+Packages:
+- fastapi: Web backend and API routing
+- uvicorn: ASGI Web server
+- python-multipart: HTML form login parsing
+- httpx: FastAPI TestClient dependency for tests
+
+6. Required Environment Variables
+---------------------------------
+Set these before starting the Web service:
+
+Linux / Jetson:
+export YOLO_WEB_PASSWORD=your_password
+export YOLO_WEB_SESSION_SECRET=your_long_random_secret
+
+PowerShell:
+$env:YOLO_WEB_PASSWORD="your_password"
+$env:YOLO_WEB_SESSION_SECRET="your_long_random_secret"
+
+Do not commit real password or secret values to git.
+
+7. Required Project Files
+-------------------------
+- configs/jetson_orin_nano.yaml
+- configs/classes.yaml
+- models/best.engine
+- scripts/run_web_detection.py
+- src/web/
+
+The TensorRT engine path is configured in configs/jetson_orin_nano.yaml:
+
+model:
+  engine_path: models/best.engine
+
+8. Web Configuration
+--------------------
+configs/jetson_orin_nano.yaml should contain:
+
+web:
+  host: 0.0.0.0
+  port: 8000
+  username: admin
+  password_env: YOLO_WEB_PASSWORD
+  stream_fps: 20
+  jpeg_quality: 80
+  session_secret_env: YOLO_WEB_SESSION_SECRET
+
+9. Start Command
+----------------
+On Jetson:
+
+python scripts/run_web_detection.py --config configs/jetson_orin_nano.yaml
+
+Then open:
+
+http://<jetson-ip>:8000
+
+Find Jetson IP:
+
+hostname -I
+
+10. Test Commands
+-----------------
+Default Web tests without real CSI camera:
+
+pytest tests/unit/test_config.py tests/test_detection_result_schema.py tests/test_web_auth.py tests/test_web_routes.py tests/integration/test_web_pipeline.py
+
+Existing unit/integration tests:
+
+pytest tests/unit tests/integration
+
+Jetson hardware validation:
+
+pytest --run-jetson tests/hardware/test_web_dashboard_runtime.py
+
+11. Common Checks
+-----------------
+- Confirm CSI camera is not already used by another process.
+- Confirm models/best.engine exists.
+- Confirm YOLO_WEB_PASSWORD and YOLO_WEB_SESSION_SECRET are set.
+- Confirm browser can reach Jetson port 8000.
+- If FPS is low, reduce web.stream_fps or web.jpeg_quality.

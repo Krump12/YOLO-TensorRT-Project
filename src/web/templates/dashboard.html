@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Live Detection</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <nav class="topbar">
+      <a class="brand" href="/dashboard">YOLO TensorRT</a>
+      <a class="nav-link active" href="/dashboard">Dashboard</a>
+      <a class="nav-link" href="/detections">Detections</a>
+      <form method="post" action="/logout" class="logout-form">
+        <button type="submit">Logout</button>
+      </form>
+    </nav>
+    <main class="page">
+      <section class="metric-row" aria-label="Runtime status">
+        <div class="metric"><span>FPS</span><strong id="fps">0.0</strong></div>
+        <div class="metric"><span>Targets</span><strong id="target-count">0</strong></div>
+        <div class="metric"><span>Camera</span><strong id="camera-running">Waiting</strong></div>
+        <div class="metric"><span>Detector</span><strong id="detector-loaded">Waiting</strong></div>
+      </section>
+      <section class="video-shell">
+        <img id="video-stream" src="/video_feed" alt="Live YOLO detection stream">
+        <p id="status-message" class="status-message">Loading live stream...</p>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

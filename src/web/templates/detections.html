@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detections</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <nav class="topbar">
+      <a class="brand" href="/dashboard">YOLO TensorRT</a>
+      <a class="nav-link" href="/dashboard">Dashboard</a>
+      <a class="nav-link active" href="/detections">Detections</a>
+      <form method="post" action="/logout" class="logout-form">
+        <button type="submit">Logout</button>
+      </form>
+    </nav>
+    <main class="page">
+      <header class="section-header">
+        <h1>Latest-frame detections</h1>
+        <p id="snapshot-meta">Showing the most recent available frame.</p>
+      </header>
+      <div id="empty-state" class="empty-state">No current targets.</div>
+      <table class="detections-table" aria-label="Latest detections">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Confidence</th>
+            <th>Bounding box</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="detections-body"></tbody>
+      </table>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
