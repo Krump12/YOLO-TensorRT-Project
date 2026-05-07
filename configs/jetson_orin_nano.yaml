@@ -1,0 +1,29 @@
+model:
+  pt_path: models/best.pt
+  engine_path: models/best.engine
+  classes_path: configs/classes.yaml
+
+camera:
+  sensor_id: 0
+  width: 1920
+  height: 1080
+  fps: 30
+  flip_method: 0
+
+inference:
+  imgsz: 640
+  precision: fp16
+  conf_threshold: 0.25
+  iou_threshold: 0.45
+  max_detections: 300
+
+runtime:
+  queue_size: 2
+  window_name: YOLO TensorRT Detection
+  exit_key: q
+  log_level: INFO
+  memory_check_interval_sec: 5
+  target_fps: 20
+  max_startup_seconds: 10
+  max_exit_seconds: 2
+  memory_growth_mb_limit: 128

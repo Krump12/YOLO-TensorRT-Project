@@ -1,0 +1,68 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Test/cache
+.pytest_cache/
+.coverage
+coverage/
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual env
+.venv/
+venv/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Logs/temp
+*.log
+*.tmp
+*.swp
+
+# Env files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TensorRT / ONNX
+models/*.engine
+models/*.onnx
+
+# PyTorch / YOLO cache
+*.pt_cache/
+runs/
+wandb/
+
+# CUDA / TensorRT temp
+*.trt
+*.cache
+
+# Jetson camera dumps/videos
+*.mp4
+*.avi
+
+# Dataset
+datasets/
+data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Linux
+*.so
+
+# macOS/Linux hidden
+._*
