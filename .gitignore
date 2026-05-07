@@ -68,6 +68,6 @@ data/
 # macOS/Linux hidden
 ._*
 
-# pt and ultralytics/nn
+# *.pt and ultralytics/nn
 *.pt
 ultralytics/nn
