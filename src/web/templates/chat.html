@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title data-i18n="chatTitle">Agent Q&A</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body data-page="chat">
+    <nav class="topbar">
+      <a class="brand" href="/dashboard">YOLO TensorRT</a>
+      <a class="nav-link" href="/dashboard" data-i18n="dashboard">Dashboard</a>
+      <a class="nav-link" href="/detections" data-i18n="history">History</a>
+      <a class="nav-link" href="/analysis" data-i18n="analysis">Analysis</a>
+      <a class="nav-link active" href="/chat" data-i18n="chat">Q&A</a>
+      <div class="language-switcher">
+        <button type="button" data-lang="zh">中文</button>
+        <button type="button" data-lang="en">English</button>
+      </div>
+      <form method="post" action="/logout" class="logout-form">
+        <button type="submit" data-i18n="logout">Logout</button>
+      </form>
+    </nav>
+    <main class="page">
+      <header class="section-header">
+        <h1 data-i18n="chatTitle">Agent Q&A</h1>
+      </header>
+      <form id="chat-form" class="chat-form">
+        <label>
+          <span data-i18n="question">Question</span>
+          <textarea id="chat-question" rows="4" required></textarea>
+        </label>
+        <button type="submit" data-i18n="ask">Ask</button>
+      </form>
+      <section id="chat-answer" class="chat-answer" hidden></section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

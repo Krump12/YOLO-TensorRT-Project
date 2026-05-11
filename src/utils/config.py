@@ -5,7 +5,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - exercised only in minimal test environments
+    yaml = None
 
 
 @dataclass
@@ -108,6 +111,12 @@ class WebConfig:
     stream_fps: float = 20.0
     jpeg_quality: int = 80
     session_secret_env: str = "YOLO_WEB_SESSION_SECRET"
+    storage_path: str = "data/web_dashboard.sqlite3"
+    device_id: str = "jetson-orin-nano"
+    camera_id: str = "csi-0"
+    analysis_interval_minutes: int = 60
+    high_risk_min_confidence: float = 0.85
+    high_risk_min_count: int = 3
 
     def validate(self) -> None:
         if not self.host:
@@ -124,6 +133,18 @@ class WebConfig:
             raise ValueError("web stream_fps must be positive")
         if not 1 <= int(self.jpeg_quality) <= 100:
             raise ValueError("web jpeg_quality must be between 1 and 100")
+        if not self.storage_path:
+            raise ValueError("web storage_path must not be empty")
+        if not self.device_id:
+            raise ValueError("web device_id must not be empty")
+        if not self.camera_id:
+            raise ValueError("web camera_id must not be empty")
+        if self.analysis_interval_minutes <= 0:
+            raise ValueError("web analysis_interval_minutes must be positive")
+        if not 0.0 <= self.high_risk_min_confidence <= 1.0:
+            raise ValueError("web high_risk_min_confidence must be between 0.0 and 1.0")
+        if self.high_risk_min_count <= 0:
+            raise ValueError("web high_risk_min_count must be positive")
 
     def password(self) -> str:
         return _required_env(self.password_env, "web password")
@@ -176,10 +197,45 @@ class AppConfig:
 
 def _read_yaml(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
+        if yaml is not None:
+            data = yaml.safe_load(f) or {}
+        else:
+            data = _minimal_yaml_load(f.read())
     if not isinstance(data, dict):
         raise ValueError(f"configuration root must be a mapping: {path}")
     return data
+
+
+def _minimal_yaml_load(text: str) -> dict[str, Any]:
+    root: dict[str, Any] = {}
+    stack: list[tuple[int, dict[str, Any]]] = [(-1, root)]
+    for raw_line in text.splitlines():
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        key, _, value = raw_line.strip().partition(":")
+        while stack and indent <= stack[-1][0]:
+            stack.pop()
+        parent = stack[-1][1]
+        if value.strip() == "":
+            child: dict[str, Any] = {}
+            parent[key] = child
+            stack.append((indent, child))
+        else:
+            parent[key] = _parse_scalar(value.strip())
+    return root
+
+
+def _parse_scalar(value: str) -> Any:
+    lowered = value.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+    try:
+        if "." in value:
+            return float(value)
+        return int(value)
+    except ValueError:
+        return value
 
 
 def load_class_names(path: str | Path) -> dict[int, str]:
@@ -236,6 +292,12 @@ def load_config(path: str | Path) -> AppConfig:
             stream_fps=float(web.get("stream_fps", 20)),
             jpeg_quality=int(web.get("jpeg_quality", 80)),
             session_secret_env=str(web.get("session_secret_env", "YOLO_WEB_SESSION_SECRET")),
+            storage_path=str(web.get("storage_path", "data/web_dashboard.sqlite3")),
+            device_id=str(web.get("device_id", "jetson-orin-nano")),
+            camera_id=str(web.get("camera_id", "csi-0")),
+            analysis_interval_minutes=int(web.get("analysis_interval_minutes", 60)),
+            high_risk_min_confidence=float(web.get("high_risk_min_confidence", 0.85)),
+            high_risk_min_count=int(web.get("high_risk_min_count", 3)),
         ),
     )
     config.validate()

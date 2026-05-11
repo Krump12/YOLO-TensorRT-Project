@@ -61,6 +61,15 @@ input {
   font-size: 16px;
 }
 
+textarea,
+select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
 button {
   border: 0;
   border-radius: 6px;
@@ -105,6 +114,23 @@ button {
   margin-left: auto;
 }
 
+.language-switcher {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.language-switcher button {
+  padding: 7px 9px;
+  background: #eef2f7;
+  color: var(--text);
+}
+
+.language-switcher button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .page {
   width: min(1180px, 100%);
   margin: 0 auto;
@@ -121,7 +147,13 @@ button {
 .metric,
 .video-shell,
 .empty-state,
-.detections-table {
+.detections-table,
+.panel,
+.filters,
+.detail-panel,
+.analysis-card,
+.chat-form,
+.chat-answer {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -144,7 +176,9 @@ button {
 }
 
 .video-shell {
+  position: relative;
   padding: 12px;
+  margin-bottom: 16px;
 }
 
 #video-stream {
@@ -158,6 +192,42 @@ button {
 .status-message,
 .section-header p {
   color: var(--muted);
+}
+
+.controls-row,
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.toggle-control {
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-control input {
+  width: auto;
+}
+
+.panel,
+.detail-panel,
+.chat-form,
+.chat-answer {
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.filters {
+  padding: 12px;
+}
+
+.filters label {
+  min-width: 180px;
 }
 
 .empty-state {
@@ -185,6 +255,29 @@ button {
   background: #eef2f7;
 }
 
+.analysis-list {
+  display: grid;
+  gap: 12px;
+}
+
+.analysis-card {
+  padding: 14px;
+  border-left: 5px solid var(--accent);
+}
+
+.severity-moderate {
+  border-left-color: #b7791f;
+}
+
+.severity-severe {
+  border-left-color: var(--danger);
+}
+
+.chat-form {
+  display: grid;
+  gap: 12px;
+}
+
 @media (max-width: 760px) {
   .topbar {
     flex-wrap: wrap;
@@ -197,5 +290,10 @@ button {
 
   .metric-row {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .detections-table {
+    display: block;
+    overflow-x: auto;
   }
 }

@@ -3,28 +3,51 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Live Detection</title>
+    <title data-i18n="dashboardTitle">Live Detection</title>
     <link rel="stylesheet" href="/static/style.css">
   </head>
-  <body>
+  <body data-page="dashboard">
     <nav class="topbar">
       <a class="brand" href="/dashboard">YOLO TensorRT</a>
-      <a class="nav-link active" href="/dashboard">Dashboard</a>
-      <a class="nav-link" href="/detections">Detections</a>
+      <a class="nav-link active" href="/dashboard" data-i18n="dashboard">Dashboard</a>
+      <a class="nav-link" href="/detections" data-i18n="history">History</a>
+      <a class="nav-link" href="/analysis" data-i18n="analysis">Analysis</a>
+      <a class="nav-link" href="/chat" data-i18n="chat">Q&A</a>
+      <div class="language-switcher">
+        <button type="button" data-lang="zh">中文</button>
+        <button type="button" data-lang="en">English</button>
+      </div>
       <form method="post" action="/logout" class="logout-form">
-        <button type="submit">Logout</button>
+        <button type="submit" data-i18n="logout">Logout</button>
       </form>
     </nav>
     <main class="page">
       <section class="metric-row" aria-label="Runtime status">
         <div class="metric"><span>FPS</span><strong id="fps">0.0</strong></div>
-        <div class="metric"><span>Targets</span><strong id="target-count">0</strong></div>
-        <div class="metric"><span>Camera</span><strong id="camera-running">Waiting</strong></div>
-        <div class="metric"><span>Detector</span><strong id="detector-loaded">Waiting</strong></div>
+        <div class="metric"><span data-i18n="targets">Targets</span><strong id="target-count">0</strong></div>
+        <div class="metric"><span data-i18n="camera">Camera</span><strong id="camera-running">Waiting</strong></div>
+        <div class="metric"><span data-i18n="detector">Detector</span><strong id="detector-loaded">Waiting</strong></div>
       </section>
-      <section class="video-shell">
+      <section class="video-shell" id="video-shell">
         <img id="video-stream" src="/video_feed" alt="Live YOLO detection stream">
         <p id="status-message" class="status-message">Loading live stream...</p>
+      </section>
+      <section class="panel">
+        <header class="section-header">
+          <h1 data-i18n="latestResults">Realtime detection results</h1>
+        </header>
+        <div id="dashboard-empty" class="empty-state" data-i18n="noCurrentTargets">No current targets.</div>
+        <table class="detections-table" aria-label="Realtime detections">
+          <thead>
+            <tr>
+              <th data-i18n="class">Class</th>
+              <th data-i18n="confidence">Confidence</th>
+              <th data-i18n="bbox">Bounding box</th>
+              <th data-i18n="timestamp">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="latest-detections-body"></tbody>
+        </table>
       </section>
     </main>
     <script src="/static/app.js"></script>

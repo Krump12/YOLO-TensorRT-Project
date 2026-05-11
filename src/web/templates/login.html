@@ -3,26 +3,31 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>YOLO Web Login</title>
+    <title data-i18n="loginTitle">YOLO Web Login</title>
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body class="auth-page">
     <main class="login-panel" aria-label="Login">
+      <div class="language-switcher">
+        <button type="button" data-lang="zh">中文</button>
+        <button type="button" data-lang="en">English</button>
+      </div>
       <h1>YOLO TensorRT</h1>
       <form method="post" action="/login" class="login-form">
         <label>
-          Username
+          <span data-i18n="username">Username</span>
           <input name="username" autocomplete="username" required autofocus>
         </label>
         <label>
-          Password
+          <span data-i18n="password">Password</span>
           <input name="password" type="password" autocomplete="current-password" required>
         </label>
         {% if error %}
         <p class="error" role="alert">{{ error }}</p>
         {% endif %}
-        <button type="submit">Log in</button>
+        <button type="submit" data-i18n="login">Log in</button>
       </form>
     </main>
+    <script src="/static/app.js"></script>
   </body>
 </html>

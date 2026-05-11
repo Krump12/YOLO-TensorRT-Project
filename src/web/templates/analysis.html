@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title data-i18n="analysisTitle">Agent Analysis</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body data-page="analysis">
+    <nav class="topbar">
+      <a class="brand" href="/dashboard">YOLO TensorRT</a>
+      <a class="nav-link" href="/dashboard" data-i18n="dashboard">Dashboard</a>
+      <a class="nav-link" href="/detections" data-i18n="history">History</a>
+      <a class="nav-link active" href="/analysis" data-i18n="analysis">Analysis</a>
+      <a class="nav-link" href="/chat" data-i18n="chat">Q&A</a>
+      <div class="language-switcher">
+        <button type="button" data-lang="zh">中文</button>
+        <button type="button" data-lang="en">English</button>
+      </div>
+      <form method="post" action="/logout" class="logout-form">
+        <button type="submit" data-i18n="logout">Logout</button>
+      </form>
+    </nav>
+    <main class="page">
+      <header class="section-header">
+        <h1 data-i18n="analysisTitle">Agent Analysis</h1>
+        <button id="start-analysis" type="button" data-i18n="startAnalysis">Start analysis</button>
+      </header>
+      <div id="analysis-empty" class="empty-state" data-i18n="noAnalysis">No analysis results yet.</div>
+      <div id="analysis-list" class="analysis-list"></div>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

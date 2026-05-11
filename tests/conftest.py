@@ -91,3 +91,13 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     models = [path for x in ["*.mlpackage", "*_openvino_model"] for path in WEIGHTS_DIR.rglob(x)]
     for directory in [TMP.parents[1] / ".pytest_cache", TMP] + models:
         shutil.rmtree(directory, ignore_errors=True)
+
+
+@pytest.fixture
+def web_storage_path(tmp_path):
+    return tmp_path / "web_dashboard.sqlite3"
+
+
+@pytest.fixture
+def openapi_contract():
+    return ROOT / "specs" / "003-agent-detection-dashboard" / "contracts" / "web-api.openapi.yaml"

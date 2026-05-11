@@ -8,3 +8,8 @@ def test_performance_budget_passes_when_within_limits():
 def test_performance_budget_reports_threshold_warnings():
     warnings = PerformanceBudget(target_fps=20, memory_growth_mb_limit=10).evaluate(10, 100, 120)
     assert len(warnings) == 2
+
+
+def test_agent_dashboard_performance_budget_is_documented():
+    warnings = PerformanceBudget(target_fps=20, memory_growth_mb_limit=128).evaluate(20, 512, 520)
+    assert warnings == []

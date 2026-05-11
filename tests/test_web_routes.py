@@ -4,10 +4,11 @@ from fastapi.testclient import TestClient
 
 from src.utils.config import AppConfig, CameraStream, DetectionResult, WebConfig
 from src.web.app import create_app
+from src.web.storage import WebStorage
 from src.web.stream import LatestStateBuffer
 
 
-def make_client(monkeypatch):
+def make_client(monkeypatch, tmp_path=None):
     monkeypatch.setenv("YOLO_WEB_PASSWORD", "secret")
     monkeypatch.setenv("YOLO_WEB_SESSION_SECRET", "test-session-secret")
     config = AppConfig(
@@ -27,7 +28,14 @@ def make_client(monkeypatch):
         camera_running=True,
         detector_loaded=True,
     )
-    client = TestClient(create_app(config, latest_state=state, start_pipeline=False))
+    storage = WebStorage((tmp_path / "web.sqlite3") if tmp_path else ":memory:")
+    storage.save_detections(
+        [DetectionResult(1, (10, 20, 30, 40), 0, "person", 0.91)],
+        detected_at=None,
+        camera_id=config.web.camera_id,
+        device_id=config.web.device_id,
+    )
+    client = TestClient(create_app(config, latest_state=state, storage=storage, start_pipeline=False))
     return client
 
 
@@ -111,12 +119,56 @@ def test_latest_detections_returns_required_json(monkeypatch):
     assert data["detections"][0]["bbox"] == {"x1": 10, "y1": 20, "x2": 30, "y2": 40}
 
 
-def test_detections_page_renders_empty_state(monkeypatch):
+def test_detections_page_renders_history_state(monkeypatch):
     client = make_client(monkeypatch)
     login(client)
 
     response = client.get("/detections")
 
     assert response.status_code == 200
-    assert "No current targets" in response.text
-    assert "Latest-frame detections" in response.text
+    assert "No target detections in the latest 48 hours" in response.text
+    assert "Detection History" in response.text
+
+
+def test_recent_detection_routes_return_history(monkeypatch):
+    client = make_client(monkeypatch)
+    login(client)
+
+    listing = client.get("/api/detections/recent?hours=48").json()
+    detection_id = listing["detections"][0]["detection_id"]
+    detail = client.get(f"/api/detections/{detection_id}").json()
+
+    assert listing["detections"][0]["class_name"] == "person"
+    assert detail["detection_id"] == detection_id
+
+
+def test_agent_analysis_routes(monkeypatch):
+    client = make_client(monkeypatch)
+    login(client)
+
+    accepted = client.post("/api/agent/analyze", json={"hours": 48}).json()
+    recent = client.get("/api/agent/analysis/recent?hours=48").json()
+    detail = client.get(f"/api/agent/analysis/{accepted['analysis_id']}").json()
+
+    assert accepted["analysis_id"]
+    assert "analyses" in recent
+    assert detail["analysis_id"] == accepted["analysis_id"]
+
+
+def test_agent_chat_route(monkeypatch):
+    client = make_client(monkeypatch)
+    login(client)
+
+    data = client.post("/api/agent/chat", json={"question": "Any pests?", "language": "en"}).json()
+
+    assert data["answer"]
+    assert data["language"] == "en"
+
+
+def test_i18n_languages_route(monkeypatch):
+    client = make_client(monkeypatch)
+
+    data = client.get("/api/i18n/languages").json()
+
+    assert data["default"] == "zh"
+    assert {"code": "en", "label": "English"} in data["languages"]

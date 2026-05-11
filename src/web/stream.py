@@ -129,6 +129,8 @@ class WebDetectionPipeline:
         detector_factory: Callable[[AppConfig], object] | None = None,
         reader_factory: Callable[[object, int], LatestFrameReader] | None = None,
         jpeg_encoder: Callable[[object, int], bytes] = encode_jpeg,
+        storage: object | None = None,
+        analysis_service: object | None = None,
     ) -> None:
         self.config = config
         self.state = state
@@ -136,6 +138,8 @@ class WebDetectionPipeline:
         self.detector_factory = detector_factory or self._default_detector
         self.reader_factory = reader_factory or (lambda camera, queue_size: LatestFrameReader(camera, queue_size=queue_size))
         self.jpeg_encoder = jpeg_encoder
+        self.storage = storage
+        self.analysis_service = analysis_service
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._reader: LatestFrameReader | None = None
@@ -176,6 +180,16 @@ class WebDetectionPipeline:
                 if packet is None:
                     continue
                 detections = detector.detect(packet.frame_id, packet.image)
+                persisted = []
+                if self.storage is not None and detections:
+                    persisted = self.storage.save_detections(
+                        detections,
+                        detected_at=packet.timestamp,
+                        camera_id=self.config.web.camera_id,
+                        device_id=self.config.web.device_id,
+                    )
+                    if self.analysis_service is not None:
+                        self.analysis_service.maybe_trigger_high_risk(persisted)
                 current_fps = fps.tick()
                 annotated = draw_overlay(packet.image.copy(), detections, current_fps)
                 jpeg = self.jpeg_encoder(annotated, self.config.web.jpeg_quality)
@@ -190,6 +204,9 @@ class WebDetectionPipeline:
                 )
                 time.sleep(max(0.0, (1.0 / max(self.config.web.stream_fps, 1.0)) - 0.001))
         except Exception as exc:
+            self.state.set_error(str(exc), camera_running=False, detector_loaded=detector_loaded)
+            import traceback
+            traceback.print_exc()
             self.state.set_error(str(exc), camera_running=False, detector_loaded=detector_loaded)
         finally:
             if self._reader is not None:

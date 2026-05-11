@@ -33,6 +33,8 @@ Set the required secrets before starting the Web service:
 ```bash
 export YOLO_WEB_PASSWORD=your_password
 export YOLO_WEB_SESSION_SECRET=your_secret
+export YOLO_AGENT_PROVIDER=deterministic
+export YOLO_AGENT_DEFAULT_LANGUAGE=zh
 ```
 
 Do not commit real secret values. Use `.env.example` only as a name reference.
@@ -60,7 +62,7 @@ hostname -I
 Default Web tests do not open a CSI camera or load a TensorRT engine:
 
 ```bash
-pytest tests/test_web_auth.py tests/test_web_routes.py tests/test_detection_result_schema.py tests/integration/test_web_pipeline.py
+pytest tests/test_web_auth.py tests/test_web_routes.py tests/test_detection_result_schema.py tests/test_detection_storage.py tests/test_video_stream_status.py tests/test_agent_analysis.py tests/test_agent_chat.py tests/test_i18n.py tests/integration/test_web_pipeline.py tests/integration/test_agent_detection_workflows.py
 ```
 
 Run existing non-Web runtime tests after implementation changes:
@@ -99,3 +101,27 @@ not collected successfully in the current non-Jetson environment.
 - Login fails: confirm `web.username` and `YOLO_WEB_PASSWORD` match.
 - FPS is too low: reduce `web.stream_fps` or `web.jpeg_quality`, verify FP16
   engine usage, and check Jetson CPU/GPU load.
+
+## 48-Hour Target History
+
+Only frames with one or more detected targets are persisted. Empty frames are
+ignored. Default history, Agent analysis, and Agent Q&A use a rolling 48-hour
+window, with older rows excluded from normal views and removable by cleanup.
+
+## Agent Analysis And Q&A
+
+Agent analysis reads recent detection evidence, computes counts, confidence,
+time distribution, and severity, then stores the result with related detection
+IDs. Manual, high-risk, and scheduled triggers share the same saved result
+shape. Analysis failures are recorded without interrupting realtime inference.
+
+Agent Q&A builds an evidence packet from recent detections and saved analysis
+results. If evidence is insufficient, it returns the required insufficient-data
+message instead of inventing a diagnosis.
+
+## Language Switching
+
+The Web UI supports Chinese and English. The browser stores the selected
+language locally and applies it immediately across login, dashboard, history,
+analysis, and chat pages. Backend fixed statuses use stable codes so the
+frontend can translate them.

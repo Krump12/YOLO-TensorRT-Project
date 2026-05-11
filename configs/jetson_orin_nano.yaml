@@ -36,3 +36,9 @@ web:
   stream_fps: 20
   jpeg_quality: 80
   session_secret_env: YOLO_WEB_SESSION_SECRET
+  storage_path: data/web_dashboard.sqlite3
+  device_id: jetson-orin-nano
+  camera_id: csi-0
+  analysis_interval_minutes: 60
+  high_risk_min_confidence: 0.85
+  high_risk_min_count: 3

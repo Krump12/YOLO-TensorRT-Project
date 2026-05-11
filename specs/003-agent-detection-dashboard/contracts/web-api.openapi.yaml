@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: YOLO TensorRT Agent Detection Dashboard API
+  version: 1.0.0
+  description: Authenticated Web dashboard API for 48-hour detection history, Agent analysis, Agent chat, and language metadata.
+servers:
+  - url: /
+security:
+  - sessionAuth: []
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+  schemas:
+    BBox:
+      type: object
+      required: [x1, y1, x2, y2]
+      properties:
+        x1: { type: integer }
+        y1: { type: integer }
+        x2: { type: integer }
+        y2: { type: integer }
+    Detection:
+      type: object
+      required: [detection_id, detected_at, class_name, confidence, bbox, camera_id, device_id, created_at]
+      properties:
+        detection_id: { type: string }
+        detected_at: { type: string, format: date-time }
+        class_name: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        bbox:
+          $ref: '#/components/schemas/BBox'
+        camera_id: { type: string }
+        device_id: { type: string }
+        frame_id: { type: string, nullable: true }
+        image_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    DetectionList:
+      type: object
+      required: [hours, detections]
+      properties:
+        hours: { type: integer, example: 48 }
+        detections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Detection'
+    Analysis:
+      type: object
+      required: [analysis_id, time_range_start, time_range_end, severity, conclusion, evidence, recommendation, need_manual_review, related_detection_ids, status]
+      properties:
+        analysis_id: { type: string }
+        analysis_time: { type: string, format: date-time, nullable: true }
+        time_range_start: { type: string, format: date-time }
+        time_range_end: { type: string, format: date-time }
+        pest_or_disease_name: { type: string, nullable: true }
+        severity:
+          type: string
+          enum: [light, moderate, severe]
+        conclusion: { type: string }
+        evidence:
+          type: object
+          additionalProperties: true
+        recommendation: { type: string }
+        need_manual_review: { type: boolean }
+        related_detection_ids:
+          type: array
+          items: { type: string }
+        trigger_type:
+          type: string
+          enum: [manual, high_risk, scheduled]
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        error: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    AnalyzeRequest:
+      type: object
+      properties:
+        hours:
+          type: integer
+          minimum: 1
+          maximum: 48
+          default: 48
+        crop_stage:
+          type: string
+          nullable: true
+        environment:
+          type: object
+          nullable: true
+          additionalProperties: true
+        trigger_type:
+          type: string
+          enum: [manual, high_risk, scheduled]
+          default: manual
+    AnalyzeResponse:
+      type: object
+      required: [analysis_id, status]
+      properties:
+        analysis_id: { type: string }
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+    ChatRequest:
+      type: object
+      required: [question]
+      properties:
+        question: { type: string, minLength: 1 }
+        language:
+          type: string
+          enum: [zh, en]
+          default: zh
+        hours:
+          type: integer
+          minimum: 1
+          maximum: 48
+          default: 48
+    ChatResponse:
+      type: object
+      required: [message_id, answer, evidence, related_detection_ids, related_analysis_ids, language]
+      properties:
+        message_id: { type: string }
+        answer: { type: string }
+        evidence:
+          type: object
+          additionalProperties: true
+        related_detection_ids:
+          type: array
+          items: { type: string }
+        related_analysis_ids:
+          type: array
+          items: { type: string }
+        language:
+          type: string
+          enum: [zh, en]
+        created_at: { type: string, format: date-time }
+    LanguageList:
+      type: object
+      required: [default, languages]
+      properties:
+        default:
+          type: string
+          enum: [zh, en]
+        languages:
+          type: array
+          items:
+            type: object
+            required: [code, label]
+            properties:
+              code:
+                type: string
+                enum: [zh, en]
+              label:
+                type: string
+paths:
+  /api/detections/recent:
+    get:
+      summary: List recent target detections
+      parameters:
+        - in: query
+          name: hours
+          schema: { type: integer, minimum: 1, maximum: 48, default: 48 }
+        - in: query
+          name: class_name
+          schema: { type: string }
+        - in: query
+          name: min_confidence
+          schema: { type: number, minimum: 0, maximum: 1 }
+      responses:
+        '200':
+          description: Recent detections in reverse chronological order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectionList'
+        '401':
+          description: Authentication required
+  /api/detections/{detection_id}:
+    get:
+      summary: Get one detection detail
+      parameters:
+        - in: path
+          name: detection_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Detection detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detection'
+        '404':
+          description: Detection not found
+        '401':
+          description: Authentication required
+  /api/agent/analyze:
+    post:
+      summary: Start Agent analysis over recent evidence
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+      responses:
+        '202':
+          description: Analysis accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+        '401':
+          description: Authentication required
+  /api/agent/analysis/recent:
+    get:
+      summary: List recent Agent analysis results
+      parameters:
+        - in: query
+          name: hours
+          schema: { type: integer, minimum: 1, maximum: 48, default: 48 }
+      responses:
+        '200':
+          description: Recent analysis results
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hours, analyses]
+                properties:
+                  hours: { type: integer }
+                  analyses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Analysis'
+        '401':
+          description: Authentication required
+  /api/agent/analysis/{analysis_id}:
+    get:
+      summary: Get one Agent analysis result
+      parameters:
+        - in: path
+          name: analysis_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Analysis detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analysis'
+        '404':
+          description: Analysis not found
+        '401':
+          description: Authentication required
+  /api/agent/chat:
+    post:
+      summary: Ask a grounded Agent question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Grounded Agent answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '401':
+          description: Authentication required
+  /api/i18n/languages:
+    get:
+      summary: List supported interface languages
+      security: []
+      responses:
+        '200':
+          description: Supported languages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguageList'

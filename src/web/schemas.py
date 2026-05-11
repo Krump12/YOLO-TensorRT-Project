@@ -80,6 +80,50 @@ class RuntimeStatusDTO:
         }
 
 
+@dataclass(frozen=True)
+class DetectionHistoryDTO:
+    detection_id: str
+    detected_at: str
+    class_name: str
+    confidence: float
+    bbox: BoundingBoxDTO
+    camera_id: str
+    device_id: str
+    frame_id: str | None
+    image_id: str | None
+    created_at: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "detection_id": self.detection_id,
+            "detected_at": self.detected_at,
+            "class_name": self.class_name,
+            "confidence": self.confidence,
+            "bbox": self.bbox.to_dict(),
+            "camera_id": self.camera_id,
+            "device_id": self.device_id,
+            "frame_id": self.frame_id,
+            "image_id": self.image_id,
+            "created_at": self.created_at,
+        }
+
+
+@dataclass(frozen=True)
+class AgentAnalysisDTO:
+    data: dict[str, object]
+
+    def to_dict(self) -> dict[str, object]:
+        return dict(self.data)
+
+
+@dataclass(frozen=True)
+class AgentChatDTO:
+    data: dict[str, object]
+
+    def to_dict(self) -> dict[str, object]:
+        return dict(self.data)
+
+
 def detection_to_dto(detection: DetectionResult) -> DetectionDTO:
     x1, y1, x2, y2 = detection.bbox
     confidence = max(0.0, min(1.0, float(detection.confidence)))
@@ -88,6 +132,22 @@ def detection_to_dto(detection: DetectionResult) -> DetectionDTO:
         class_name=str(detection.class_name),
         confidence=confidence,
         bbox=BoundingBoxDTO(int(x1), int(y1), int(x2), int(y2)),
+    )
+
+
+def detection_history_to_dto(row: dict[str, object]) -> DetectionHistoryDTO:
+    bbox = row["bbox"]
+    return DetectionHistoryDTO(
+        detection_id=str(row["detection_id"]),
+        detected_at=str(row["detected_at"]),
+        class_name=str(row["class_name"]),
+        confidence=float(row["confidence"]),
+        bbox=BoundingBoxDTO(int(bbox["x1"]), int(bbox["y1"]), int(bbox["x2"]), int(bbox["y2"])),
+        camera_id=str(row["camera_id"]),
+        device_id=str(row["device_id"]),
+        frame_id=None if row.get("frame_id") is None else str(row.get("frame_id")),
+        image_id=None if row.get("image_id") is None else str(row.get("image_id")),
+        created_at=str(row["created_at"]),
     )
 
 
